@@ -1,0 +1,12 @@
+[package]
+name = "rust2"
+version = "0.1.0"
+authors = ["theor"]
+edition = "2018"
+
+[dependencies]
+rustyline = "1.0.0"
+
+[[bin]]
+name = "step0_repl"
+path = "step0_repl.rs"
