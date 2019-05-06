@@ -1,2 +1,4 @@
 #!/bin/bash
-exec $(dirname $0)/${STEP:-stepA_mal} "${@}"
+# exec $(dirname $0)/${STEP:-stepA_mal} "${@}"
+echo running ${STEP:-stepA_mal} "${@}"
+cd $(dirname $0) && cargo r --bin ${STEP:-stepA_mal} "${@}"
