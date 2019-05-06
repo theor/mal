@@ -27,14 +27,14 @@ fn main() {
           let ast = reader::read_str(&line);
           match ast {
             Ok(ast) => println!("{}", ast),
-            Err(e) => println!("ERROR: {:?}", e),
+            Err(e) => println!("{}", e),
           }
         }
       }
       Err(ReadlineError::Interrupted) => continue,
       Err(ReadlineError::Eof) => break,
       Err(err) => {
-        println!("Error: {:?}", err);
+        println!("{}", err);
         break;
       }
     }

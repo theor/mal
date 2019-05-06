@@ -21,7 +21,10 @@ pub enum MalErr {
 
 impl fmt::Display for MalErr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
+        match self {
+            MalErr::ErrString(ref e) => write!(f, "{}", e),
+
+        }
     }
 }
 
@@ -31,14 +34,14 @@ impl Reader {
         Ok(self
             .tokens
             .get(self.pos - 1)
-            .ok_or(MalErr::ErrString("underflow".to_string()))?
+            .ok_or(MalErr::ErrString("EOF".to_string()))?
             .to_string())
     }
     fn peek(&self) -> Result<String, MalErr> {
         Ok(self
             .tokens
             .get(self.pos)
-            .ok_or(MalErr::ErrString("underflow".to_string()))?
+            .ok_or(MalErr::ErrString("EOF".to_string()))?
             .to_string())
     }
 }
