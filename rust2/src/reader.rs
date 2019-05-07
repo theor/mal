@@ -95,7 +95,11 @@ fn read_atom(s: &mut Reader) -> MalRes {
         "false" => Ok(Ast::Bool(false)),
         _ => {
             if let Some('\"') = n.chars().next() {
-                Ok(Ast::MalString(unescape_str(&n[1..n.len() - 1])))
+                if n.chars().last() != Some('\"') {
+                    Err(MalErr::ErrString("EOF".to_string()))
+                } else {
+                    Ok(Ast::MalString(unescape_str(&n[1..n.len() - 1]))) 
+                }
             } else {
                 n.parse::<i32>()
                     .map(|u| Ast::Int(u))
