@@ -19,7 +19,6 @@ impl fmt::Display for MalErr {
 }
 
 // pub type MalFn = Fn(&[Ast]) -> Ast;
-pub type Env = std::collections::hash_map::HashMap<String, Ast>;
 #[derive(Clone)]
 pub enum Ast {
     List(Vec<Ast>),
