@@ -1,5 +1,5 @@
 use crate::ast::Ast;
-use regex::{Regex, Captures};
+use regex::{Captures, Regex};
 use std::fmt;
 
 lazy_static! {
@@ -23,7 +23,6 @@ impl fmt::Display for MalErr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             MalErr::ErrString(ref e) => write!(f, "{}", e),
-
         }
     }
 }
@@ -62,22 +61,20 @@ impl Reader {
 
 pub type MalRes = Result<Ast, MalErr>;
 
-fn read_list(s: &mut Reader) -> MalRes {
+fn read_list<F>(s: &mut Reader, end: char, f:F) -> MalRes
+where F: FnOnce(Vec<Ast>) -> Ast {
     let mut res = Vec::new();
     loop {
         let next = s.peek()?;
-        match &next[..] {
-            ")" => {
-                s.next()?;
-                break;
-            }
-            _ => {
-                let item = read_form(s)?;
-                res.push(item)
-            }
-        };
+        if next.chars().next().map_or(false, |c| c == end) {
+            s.next()?;
+            break;
+        } else {
+            let item = read_form(s)?;
+            res.push(item)
+        }
     }
-    Ok(Ast::List(res))
+    Ok(f(res))
 }
 
 fn unescape_str(s: &str) -> String {
@@ -98,7 +95,7 @@ fn read_atom(s: &mut Reader) -> MalRes {
         "false" => Ok(Ast::Bool(false)),
         _ => {
             if let Some('\"') = n.chars().next() {
-                Ok(Ast::MalString(unescape_str(&n[1..n.len()- 1])))
+                Ok(Ast::MalString(unescape_str(&n[1..n.len() - 1])))
             } else {
                 n.parse::<i32>()
                     .map(|u| Ast::Int(u))
@@ -113,7 +110,11 @@ fn read_form(s: &mut Reader) -> MalRes {
     match &next[..] {
         "(" => {
             s.next()?;
-            read_list(s)
+            read_list(s, ')', Ast::List)
+        }
+        "[" => {
+            s.next()?;
+            read_list(s, ']', Ast::Vector)
         }
         _ => read_atom(s),
     }
