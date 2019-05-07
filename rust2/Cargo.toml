@@ -20,36 +20,36 @@ path = "src/step1_read_print.rs"
 
 [[bin]]
 name = "step2_eval"
-path = "step2_eval.rs"
+path = "src/step2_eval.rs"
 
 [[bin]]
 name = "step3_env"
-path = "step3_env.rs"
+path = "src/step3_env.rs"
 
 [[bin]]
 name = "step4_if_fn_do"
-path = "step4_if_fn_do.rs"
+path = "src/step4_if_fn_do.rs"
 
 [[bin]]
 name = "step5_tco"
-path = "step5_tco.rs"
+path = "src/step5_tco.rs"
 
 [[bin]]
 name = "step6_file"
-path = "step6_file.rs"
+path = "src/step6_file.rs"
 
 [[bin]]
 name = "step7_quote"
-path = "step7_quote.rs"
+path = "src/step7_quote.rs"
 
 [[bin]]
 name = "step8_macros"
-path = "step8_macros.rs"
+path = "src/step8_macros.rs"
 
 [[bin]]
 name = "step9_try"
-path = "step9_try.rs"
+path = "src/step9_try.rs"
 
 [[bin]]
 name = "stepA_mal"
-path = "stepA_mal.rs"
+path = "src/stepA_mal.rs"

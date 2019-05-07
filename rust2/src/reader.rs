@@ -1,6 +1,5 @@
-use crate::ast::Ast;
+use crate::ast::{MalErr, MalRes, Ast};
 use regex::{Captures, Regex};
-use std::fmt;
 
 lazy_static! {
     static ref RE: Regex =
@@ -12,19 +11,6 @@ lazy_static! {
 struct Reader {
     tokens: Vec<String>,
     pos: usize,
-}
-
-#[derive(Debug, Clone)]
-pub enum MalErr {
-    ErrString(String),
-}
-
-impl fmt::Display for MalErr {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            MalErr::ErrString(ref e) => write!(f, "{}", e),
-        }
-    }
 }
 
 impl Reader {
@@ -58,8 +44,6 @@ impl Reader {
         Reader { tokens, pos: 0 }
     }
 }
-
-pub type MalRes = Result<Ast, MalErr>;
 
 fn read_list<F>(s: &mut Reader, end: char, f:F) -> MalRes
 where F: FnOnce(Vec<Ast>) -> Ast {
@@ -101,7 +85,7 @@ fn read_atom(s: &mut Reader) -> MalRes {
                     Ok(Ast::MalString(unescape_str(&n[1..n.len() - 1]))) 
                 }
             } else {
-                n.parse::<i32>()
+                n.parse::<i64>()
                     .map(|u| Ast::Int(u))
                     .or_else(|_| Ok(Ast::Sym(n)))
             }

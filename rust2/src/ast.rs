@@ -1,14 +1,35 @@
 use std::fmt;
 
-#[derive(Clone, Debug)]
+
+#[derive(Debug, Clone)]
+pub enum MalErr {
+    ErrString(String),
+}
+
+pub type MalRes = Result<Ast, MalErr>;
+pub type MalArgs = [Ast];
+
+
+impl fmt::Display for MalErr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            MalErr::ErrString(ref e) => write!(f, "{}", e),
+        }
+    }
+}
+
+// pub type MalFn = Fn(&[Ast]) -> Ast;
+pub type Env = std::collections::hash_map::HashMap<String, Ast>;
+#[derive(Clone)]
 pub enum Ast {
     List(Vec<Ast>),
     Vector(Vec<Ast>),
-    Int(i32),
+    Int(i64),
     Sym(String),
     MalString(String),
     Bool(bool),
     Nil,
+    Fun(fn(&MalArgs) -> MalRes),
 }
 
 fn escape_str(s: &str) -> String {
@@ -53,6 +74,7 @@ impl Ast {
             }
             &Nil => write!(f, "nil"),
             &Bool(b) => write!(f, "{}", if b { "true" } else { "false" }),
+            Fun(_) => write!(f, "fun"), // TODO ?
         }
     }
 }
