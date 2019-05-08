@@ -1,5 +1,6 @@
 use std::fmt;
-
+use std::rc::Rc;
+use crate::env::Env;
 
 #[derive(Debug, Clone)]
 pub enum MalErr {
@@ -28,7 +29,13 @@ pub enum Ast {
     MalString(String),
     Bool(bool),
     Nil,
-    Fun(fn(&MalArgs) -> MalRes),
+    Fun(fn(&MalArgs, &mut Env) -> MalRes),
+    MalFun {
+        eval: fn(&Ast, &mut Env) -> MalRes,
+        ast: Rc<Ast>,
+        params: Vec<String>,
+        env: Env,
+    },
 }
 
 fn escape_str(s: &str) -> String {
@@ -73,7 +80,8 @@ impl Ast {
             }
             &Nil => write!(f, "nil"),
             &Bool(b) => write!(f, "{}", if b { "true" } else { "false" }),
-            Fun(_) => write!(f, "fun"), // TODO ?
+            Fun(_) => write!(f, "#<function>"), 
+            MalFun { .. } =>  write!(f, "#<function>"),
         }
     }
 }

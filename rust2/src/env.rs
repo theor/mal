@@ -15,8 +15,8 @@ impl Env {
         }
     }
 
-    pub fn from(parent: Box<Env>) -> Self {
-        Self { outer: Some(parent), .. Self::new() }
+    pub fn from(parent: &Env) -> Self {
+        Self { outer: Some(Box::new(parent.clone())), .. Self::new() }
     }
 
     pub fn insert(&mut self, key: &String, value: Ast) -> MalRes {
@@ -25,6 +25,7 @@ impl Env {
     }
 
     pub fn get(&mut self, key: &String) -> Option<Ast> {
+        // println!("  get {} here {:?}", key, self.map.borrow().keys());
         let outer_ref = self.outer.as_mut();
         let b = self.map.borrow();
         b.get(key).map(|x| x.clone()).or_else(|| outer_ref.and_then(|parent| parent.get(key).clone()))
