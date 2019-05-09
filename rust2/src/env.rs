@@ -10,7 +10,7 @@ pub struct EnvStruct {
 }
 
 #[derive(Clone)]
-pub struct Env(Rc<EnvStruct>);
+pub struct Env(pub Rc<EnvStruct>);
 
 impl Env {
      pub fn new() -> Self {
