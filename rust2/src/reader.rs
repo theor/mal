@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::ast::{MalErr, MalRes, Ast};
 use regex::{Captures, Regex};
 
@@ -103,6 +104,23 @@ fn read_form(s: &mut Reader) -> MalRes {
         "[" => {
             s.next()?;
             read_list(s, ']', Ast::Vector)
+        }
+        "{" => {
+            s.next()?;
+            // Ast::HashMap(std::default::Default::default())
+            read_list(s, '}', |v| {
+                let mut map: HashMap<String, Ast> = Default::default();
+                let mut it = v.iter();
+                while let Some(key) = it.next() {
+                    let value = it.next().unwrap();
+                    let key = match key {
+                        Ast::MalString(ref s) | Ast::Sym(ref s) => s,
+                        _ => panic!(""),
+                    };
+                    let _ = map.insert(key.to_string(), value.clone());
+                }
+                Ast::HashMap(map)
+            })
         }
         _ => read_atom(s),
     }

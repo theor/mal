@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt;
 use std::rc::Rc;
 use crate::env::Env;
@@ -24,6 +25,7 @@ impl fmt::Display for MalErr {
 pub enum Ast {
     List(Vec<Ast>),
     Vector(Vec<Ast>),
+    HashMap(std::collections::HashMap<String,Ast>),
     Int(i64),
     Sym(String),
     MalString(String),
@@ -63,6 +65,21 @@ fn print_seq(readably: bool, f: &mut fmt::Formatter<'_>, l: &Vec<Ast>, start: ch
     write!(f, "{}", end)
 }
 
+fn print_hashmap(readably: bool, f: &mut fmt::Formatter<'_>, l: &HashMap<String, Ast>) ->  fmt::Result {
+    let len = l.len();
+    write!(f, "{{" )?;
+
+    for (i, (k, v)) in l.iter().enumerate() {
+        Ast::MalString(k.to_string()).pr_str(readably, f)?;
+        write!(f, " ")?;
+        v.pr_str(readably, f)?;
+        if i < len - 1 {
+            write!(f, " ")?;
+        }
+    }
+    write!(f, "}}")
+}
+
 impl Ast {
     fn pr_str(&self, readably: bool, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use Ast::*;
@@ -70,9 +87,12 @@ impl Ast {
             &Int(i) => write!(f, "{}", i),
             &List(ref l) => print_seq(readably, f, l, '(', ')'),
             &Vector(ref l) => print_seq(readably, f, l, '[', ']'),
+            &HashMap(ref l) => print_hashmap(readably, f, l),
             &Sym(ref s) => write!(f, "{}", s),
             &MalString(ref s) => {
-                if readably {
+                if let Some(':') = s.chars().next() {
+                    write!(f, "{}", s)
+                } else if readably {
                     write!(f, "\"{}\"", escape_str(s))
                 } else {
                     write!(f, "{}", s)

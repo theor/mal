@@ -10,7 +10,8 @@ mal: stepA_mal
 	cp $< $@
 
 %: #%.rs
-	cargo build --release --bin $*
+	cargo build --release --bin step4_if_fn_do
+	# cargo build --release --bin $*
 	# cp target/release/$* $@
 
 # STEP0_DEPS = readline.rs

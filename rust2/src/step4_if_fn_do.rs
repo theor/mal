@@ -39,7 +39,12 @@ fn eval_ast(ast: &Ast, env: &mut Env) -> MalRes {
       .map(|x| eval(x, env))
       .collect::<Result<Vec<Ast>, MalErr>>()
       .map(Vector),
-    // HashMap(m) => l.iter().map(|x| eval(x, env)).collect::<Result<HashMap<String, Ast>, MalErr>>().map(Vector),
+    HashMap(ref m) => m.iter().map(|(k,v)| eval(v, env).map(|v2| (k.to_owned(), v2)))
+      .collect::<Result<std::collections::HashMap<String, Ast>, MalErr>>()
+      // .collect::<std::collections::HashMap<String, Result<Ast, MalErr>>>()
+      
+      .map(HashMap)
+      ,
     _ => Ok(ast.clone()),
   }
 }
@@ -65,7 +70,7 @@ fn call(call_list: &Vec<Ast>, env: &mut Env) -> MalRes {
       }
       eval(ast, &mut call_env)
     }
-    _ => unreachable!("expected a function, got {}", fun),
+    _ => Err(MalErr::ErrString(format!("expected a function, got {}", fun))),
   }
 }
 
