@@ -1,5 +1,5 @@
 use crate::ast::Ast::*;
-use crate::ast::{Ast, MalRes, MalErr, MalArgs, DisplayNonReadably};
+use crate::ast::{Ast, DisplayNonReadably, MalArgs, MalErr, MalRes};
 use itertools::Itertools;
 
 fn int_op(op: fn(i64, i64) -> Ast, a: &MalArgs) -> MalRes {
@@ -11,7 +11,10 @@ fn int_op(op: fn(i64, i64) -> Ast, a: &MalArgs) -> MalRes {
 
 fn eq(a: &Ast, b: &Ast) -> MalRes {
   match (a, b) {
-    (List(ref a), List(ref b)) | (Vector(ref a), Vector(ref b)) | (List(ref a), Vector(ref b)) | (Vector(ref a), List(ref b)) => {
+    (List(ref a), List(ref b))
+    | (Vector(ref a), Vector(ref b))
+    | (List(ref a), Vector(ref b))
+    | (Vector(ref a), List(ref b)) => {
       if a.len() != b.len() {
         Ok(Bool(false))
       } else {
@@ -32,7 +35,7 @@ fn eq(a: &Ast, b: &Ast) -> MalRes {
 }
 
 pub fn ns() -> Vec<(&'static str, Ast)> {
-    vec![
+  vec![
     ("+", Fun(|args, _env| int_op(|i, j| Int(i + j), args))),
     ("-", Fun(|args, _env| int_op(|i, j| Int(i - j), args))),
     ("/", Fun(|args, _env| int_op(|i, j| Int(i / j), args))),
@@ -75,25 +78,60 @@ pub fn ns() -> Vec<(&'static str, Ast)> {
         _ => Ok(Int(0)),
       }),
     ),
-    (
-      "=",
-      Fun(|args, _env| eq(&args[0], &args[1])),
-    ),
+    ("=", Fun(|args, _env| eq(&args[0], &args[1]))),
     (
       "pr-str",
-      Fun(|args, _env| Ok(MalString(format!("{}", args.iter().join(" ")))))
+      Fun(|args, _env| Ok(MalString(format!("{}", args.iter().join(" "))))),
     ),
     (
       "str",
-      Fun(|args, _env| Ok(MalString(format!("{}", args.iter().map(DisplayNonReadably).join("")))))
+      Fun(|args, _env| {
+        Ok(MalString(format!(
+          "{}",
+          args.iter().map(DisplayNonReadably).join("")
+        )))
+      }),
     ),
     (
       "prn",
-      Fun(|args, _env| { println!("{}", args.iter().join(" ")); Ok(Nil)})
+      Fun(|args, _env| {
+        println!("{}", args.iter().join(" "));
+        Ok(Nil)
+      }),
     ),
     (
       "println",
-      Fun(|args, _env| { println!("{}",format!("{}", args.iter().map(DisplayNonReadably).join(" "))); Ok(Nil)})
-    )
+      Fun(|args, _env| {
+        println!(
+          "{}",
+          format!("{}", args.iter().map(DisplayNonReadably).join(" "))
+        );
+        Ok(Nil)
+      }),
+    ),
+    (
+      "read-string",
+      Fun(|args, _env| {
+        if let MalString(ref s) = &args[0] {
+          crate::reader::read_str(s)
+        } else {
+          crate::ast::error("eval parameter must be a string")
+        }
+      }),
+    ),
+    ("slurp",
+      Fun(|args, _env| {
+        if let MalString(ref filename) = &args[0] {
+          use std::fs;
+          fs::read_to_string(filename).map(MalString).map_err(|e| MalErr::ErrString(e.to_string()))
+        }else {
+          crate::ast::error("read_string parameter must be a string")
+        }
+      })
+    ),
+    // (
+    //   "read-string",
+    //   Fun(|args, _env| {})
+    // ),
   ]
 }

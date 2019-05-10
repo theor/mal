@@ -119,3 +119,11 @@ impl<'a> fmt::Display for DisplayNonReadably<'a> {
         self.0.pr_str(false, f)
     }
 }
+
+pub fn error(s: &str) -> MalRes {
+  Err(MalErr::ErrString(s.to_owned()))
+}
+
+pub fn error_s(s: String) -> MalRes {
+  error(&s.to_owned())
+}

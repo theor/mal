@@ -51,14 +51,6 @@ fn eval_ast(ast: &Ast, env: &mut Env) -> MalRes {
   }
 }
 
-fn error(s: &str) -> MalRes {
-  Err(MalErr::ErrString(s.to_owned()))
-}
-
-fn error_s(s: String) -> MalRes {
-  error(&s.to_owned())
-}
-
 fn call(call_list: &Vec<Ast>, env: &mut Env, ast: &mut Ast) -> Option<MalRes> {
   use ast::Ast::*;
 

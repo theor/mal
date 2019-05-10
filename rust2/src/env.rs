@@ -5,7 +5,7 @@ use std::fmt;
 
 // #[derive(Debug)]
 pub struct EnvStruct {
-    outer: Option<Env>,
+    pub outer: Option<Env>,
     map: RefCell<std::collections::hash_map::HashMap<String, Ast>>
 }
 
