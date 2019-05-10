@@ -10,7 +10,7 @@ mal: stepA_mal
 	cp $< $@
 
 %: #%.rs
-	cargo build --release --bin step6_file
+	cargo build --release --bin step7_quote
 	# cargo build --release --bin $*
 	# cp target/release/$* $@
 

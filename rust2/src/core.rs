@@ -163,10 +163,22 @@ pub fn ns() -> Vec<(&'static str, Ast)> {
         error("can only deref an atom")
       }})
     ),
-    // (
-    //   "read-string",
-    //   Fun(|args, _env| {})
-    // ),
+    (
+      "cons",
+      Fun(|args, _env| {
+      if let Ast::List(ref l) = &args[1] {
+        Ok(Ast::List(std::iter::once(&args[0]).chain(l.iter()).cloned().collect()))
+      } else {
+           error("param 2 needs to be a list")
+        }
+      })
+    ),
+    (
+      "concat",
+      Fun(|args, _env| { 
+        Ok(Ast::List(args.iter().filter_map(|a| if let Ast::List(ref l) = &a { Some(l.iter()) } else { None }).flatten().cloned().collect()))
+      })
+    ),
     // (
     //   "read-string",
     //   Fun(|args, _env| {})
