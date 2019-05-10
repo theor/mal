@@ -135,7 +135,7 @@ pub fn error_s(s: String) -> MalRes {
   error(&s.to_owned())
 }
 
-pub fn call(call_list: &Vec<Ast>, env: &mut Env, ast: &mut Ast) -> Option<MalRes> {
+pub fn call(call_list: &[Ast], env: &mut Env, ast: &mut Ast) -> Option<MalRes> {
   use Ast::*;
 
   // println!("  call {}", Ast::List(call_list.clone()));
