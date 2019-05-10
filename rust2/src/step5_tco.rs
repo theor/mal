@@ -20,10 +20,12 @@ fn eval_ast(ast: &Ast, env: &mut Env) -> MalRes {
   use ast::Ast::*;
   match ast {
     Sym(ref s) => {
-      if let Some(sym) = env.get(s) {
+      if let Some(':') = s.chars().next() { // keyword
+        Ok(ast.clone())
+      } else if let Some(sym) = env.get(s) {
         Ok(sym.clone())
       } else {
-        Err(MalErr::ErrString(format!("{} not found", s).to_owned()))
+        error_s(format!("{} not found", s).to_owned())
       }
     }
     List(ref l) => {
@@ -53,7 +55,11 @@ fn error(s: &str) -> MalRes {
   Err(MalErr::ErrString(s.to_owned()))
 }
 
-fn call(call_list: &Vec<Ast>, env: &mut Env, mut ast: &mut Ast) -> Option<MalRes> {
+fn error_s(s: String) -> MalRes {
+  error(&s.to_owned())
+}
+
+fn call(call_list: &Vec<Ast>, env: &mut Env, ast: &mut Ast) -> Option<MalRes> {
   use ast::Ast::*;
 
   // println!("  call {}", Ast::List(call_list.clone()));
@@ -64,14 +70,26 @@ fn call(call_list: &Vec<Ast>, env: &mut Env, mut ast: &mut Ast) -> Option<MalRes
     Fun(f) => Some(f(args, env)),
     MalFun {
       ast: fun_ast,
-      eval,
+      eval: _,
       params,
       env: ref closure_env,
     } => {
       let mut call_env = Env::env_bind(closure_env);
-      for (p, arg) in params.iter().zip(args.iter()) {
-        call_env.insert(p, arg.clone()).unwrap();
+      let mut params_it = params.iter();
+      let mut args_it = args.iter();
+      while let Some(p) = params_it.next() {
+        match p.as_ref() {
+          "&" => {
+            let variadic_name = params_it.next().expect("variadic params name missing");
+            let variadic_list = Ast::List(args_it.cloned().collect::<Vec<Ast>>());
+            // println!("variadic {} {}", variadic_name, variadic_list);
+            call_env.insert(variadic_name, variadic_list).unwrap();
+            break;
+          },
+          _ => { call_env.insert(p, args_it.next().unwrap().clone()).unwrap(); },
+        }
       }
+      
       *env = call_env;
       *ast = fun_ast.as_ref().clone();
       None
@@ -135,13 +153,17 @@ fn eval(ast: &Ast, env: &mut Env) -> MalRes {
 
             Sym(ref s) if s == "do" => match l[1..]
               .iter()
-              .try_fold(Nil, |_prev, cur| eval_ast(cur, &mut env))?
+              .try_fold(Nil, |_prev, cur| eval(cur, &mut env))?
             {
-              List(_) => {
-                ast = l.iter().last().unwrap_or(&Nil).clone();
+              x => { 
+                ast = x;
                 continue 'tco;
               }
-              _ => return error("invalid do form"),
+              // List(_) => {
+                // ast = l.iter().last().unwrap_or(&Nil).clone();
+                // continue 'tco;
+              // }
+              // x => return error_s(&format!("invalid do form {}", x)),
             },
             Sym(ref s) if s == "if" => match eval(&l[1], &mut env)? {
               Nil | Bool(false) => {
@@ -156,7 +178,7 @@ fn eval(ast: &Ast, env: &mut Env) -> MalRes {
             Sym(ref s) if s == "fn*" => {
               // (fn* (a b) (+ b a))
               let args = match &l[1] {
-                List(ref args) => Ok(
+                List(ref args) | Vector(ref args) => Ok(
                   args
                     .iter()
                     .map(|a| match a {

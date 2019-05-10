@@ -81,7 +81,7 @@ fn print_hashmap(readably: bool, f: &mut fmt::Formatter<'_>, l: &HashMap<String,
 }
 
 impl Ast {
-    fn pr_str(&self, readably: bool, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    pub fn pr_str(&self, readably: bool, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use Ast::*;
         match self {
             &Int(i) => write!(f, "{}", i),
@@ -109,5 +109,13 @@ impl Ast {
 impl fmt::Display for Ast {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.pr_str(true, f)
+    }
+}
+
+pub struct DisplayNonReadably<'a>(pub &'a Ast);
+
+impl<'a> fmt::Display for DisplayNonReadably<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.pr_str(false, f)
     }
 }
