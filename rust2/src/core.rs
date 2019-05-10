@@ -1,6 +1,10 @@
 use crate::ast::Ast::*;
-use crate::ast::{Ast, DisplayNonReadably, MalArgs, MalErr, MalRes};
+use crate::ast::{Ast, DisplayNonReadably, MalArgs, MalErr, MalRes, error};
 use itertools::Itertools;
+use std::{
+  // borrow::Borrow,
+  rc::Rc,
+};
 
 fn int_op(op: fn(i64, i64) -> Ast, a: &MalArgs) -> MalRes {
   match (a[0].clone(), a[1].clone()) {
@@ -129,6 +133,45 @@ pub fn ns() -> Vec<(&'static str, Ast)> {
         }
       })
     ),
+    (
+      "atom",
+      Fun(|args, _env| { Ok(Ast::Atom(std::rc::Rc::new(std::cell::RefCell::new(args[0].clone())))) })
+    ),
+    (
+      "atom?",
+      Fun(|args, _env| Ok(Bool(if let Ast::Atom(_) = args[0] { true } else { false})))
+    ),
+     (
+      "deref",
+      Fun(|args, _env| if let Ast::Atom(ref a) = &args[0] { Ok(a.borrow().clone()) } else { error("can only deref an atom")})
+    ),
+    (
+      "reset!",
+      Fun(|args, _env| if let Ast::Atom(a) = &args[0] { 
+        // use std::borrow::BorrowMut;
+        *a.borrow_mut() = args[1].clone();
+        Ok(args[1].clone())
+      } else {
+        error("can only deref an atom")
+      })
+    ),
+    (
+      "swap!",
+      Fun(|args, env| {if let Ast::Atom(a) = &args[0] { 
+        // use std::borrow::BorrowMut;
+        *a.borrow_mut() = match &args[1] {
+          Ast::Fun(f) => f(&args[1..], env)?,
+          _ => panic!(),
+        };
+        Ok(a.borrow().clone())
+      } else {
+        error("can only deref an atom")
+      }})
+    ),
+    // (
+    //   "read-string",
+    //   Fun(|args, _env| {})
+    // ),
     // (
     //   "read-string",
     //   Fun(|args, _env| {})

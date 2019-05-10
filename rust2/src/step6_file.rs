@@ -51,49 +51,6 @@ fn eval_ast(ast: &Ast, env: &mut Env) -> MalRes {
   }
 }
 
-fn call(call_list: &Vec<Ast>, env: &mut Env, ast: &mut Ast) -> Option<MalRes> {
-  use ast::Ast::*;
-
-  // println!("  call {}", Ast::List(call_list.clone()));
-
-  let fun = call_list.get(0).expect("list should not be empty");
-  let args = &call_list[1..];
-  match fun {
-    Fun(f) => Some(f(args, env)),
-    MalFun {
-      ast: fun_ast,
-      eval: _,
-      params,
-      env: ref closure_env,
-    } => {
-      let mut call_env = Env::env_bind(closure_env);
-      let mut params_it = params.iter();
-      let mut args_it = args.iter();
-      while let Some(p) = params_it.next() {
-        match p.as_ref() {
-          "&" => {
-            let variadic_name = params_it.next().expect("variadic params name missing");
-            let variadic_list = Ast::List(args_it.cloned().collect::<Vec<Ast>>());
-            // println!("variadic {} {}", variadic_name, variadic_list);
-            call_env.insert(variadic_name, variadic_list).unwrap();
-            break;
-          },
-          _ => { call_env.insert(p, args_it.next().unwrap().clone()).unwrap(); },
-        }
-      }
-      
-      *env = call_env;
-      *ast = fun_ast.as_ref().clone();
-      None
-      // eval(ast, &mut call_env)
-    }
-    _ => Some(Err(MalErr::ErrString(format!(
-      "expected a function, got {}",
-      fun
-    )))),
-  }
-}
-
 fn eval(ast: &Ast, env: &mut Env) -> MalRes {
   // println!("eval {}", ast);
   use ast::Ast::*;
