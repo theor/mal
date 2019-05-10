@@ -179,10 +179,13 @@ fn eval(ast: &Ast, env: &mut Env) -> MalRes {
   }
 }
 
-fn rep(s: &String, mut env: &mut Env) -> MalRes {
-  if s == "#env" { println!("{}", env); return Ok(Ast::Nil); }
-  reader::read_str(s)
-    .and_then(|x| eval(&x, &mut env))
+fn rep(s: &String, mut env: &mut Env) {
+  if s == "#env" { println!("{}", env); }
+  match reader::read_str(s)
+    .and_then(|x| eval(&x, &mut env)) {
+      Ok(ast) => println!("{}", ast),
+      Err(e) => println!("{}", e),
+    }
 }
 
 fn main() {
@@ -194,12 +197,26 @@ fn main() {
   }
 
   let mut env = Env::new();
+  
   for (n, v) in core::ns().into_iter() {
     env.insert(&n.into(), v).unwrap();
   }
 
-  rep(&"(def! not (fn* (a) (if a false true)))".to_owned(), &mut env).unwrap();
-  rep(&"(def! load-file (fn* (f) (eval (read-string (str \"(do \" (slurp f) \")\")))))".to_owned(), &mut env).unwrap();
+  rep(&"(def! not (fn* (a) (if a false true)))".to_owned(), &mut env);
+  rep(&"(def! load-file (fn* (f) (eval (read-string (str \"(do \" (slurp f) \")\")))))".to_owned(), &mut env);
+
+
+  let mut args = std::env::args();
+  args.next().unwrap(); // bin name
+  if let Some(file) = args.next() {
+    println!("{}", file);
+    let argv = args.map(|a| Ast::MalString(a.to_owned())).collect::<Vec<Ast>>();
+    env.insert(&"*ARGV*".to_owned(), Ast::List(argv)).unwrap();
+    rep(&format!("(load-file \"{}\")", file), &mut env);
+    return;
+  } else {
+    env.insert(&"*ARGV*".to_owned(), Ast::List(Vec::new())).unwrap();
+  }
 
   loop {
     let readline = rl.readline("user> ");
@@ -208,10 +225,7 @@ fn main() {
         rl.add_history_entry(&line);
         rl.save_history(".mal-history").unwrap();
         if line.len() > 0 {
-          match rep(&line, &mut env) {
-            Ok(ast) => println!("{}", ast),
-            Err(e) => println!("{}", e),
-          }
+          rep(&line, &mut env);
         }
       }
       Err(ReadlineError::Interrupted) => continue,

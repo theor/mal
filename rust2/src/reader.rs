@@ -97,6 +97,11 @@ fn read_atom(s: &mut Reader) -> MalRes {
 fn read_form(s: &mut Reader) -> MalRes {
     let next = s.peek()?;
     match &next[..] {
+        "@" => {
+            s.next()?;
+            let derefed = read_form(s)?;
+            Ok(Ast::List(vec![Ast::Sym("deref".to_owned()), derefed]))
+        },
         "(" => {
             s.next()?;
             read_list(s, ')', Ast::List)

@@ -135,6 +135,46 @@ pub fn error_s(s: String) -> MalRes {
   error(&s.to_owned())
 }
 
+pub fn apply(call_list: &[Ast], env: &mut Env) -> MalRes {
+  use Ast::*;
+//   use itertools::Itertools;
+//   println!("  apply {}", call_list.iter().join(" "));
+  let fun = call_list.get(0).expect("list should not be empty");
+  let args = &call_list[1..];
+   match fun {
+    Fun(f) => f(args, env),
+    MalFun {
+      ast: fun_ast,
+      eval,
+      params,
+      env: ref closure_env,
+    } => {
+      let mut call_env = Env::env_bind(closure_env);
+      let mut params_it = params.iter();
+      let mut args_it = args.iter();
+      while let Some(p) = params_it.next() {
+        match p.as_ref() {
+          "&" => {
+            let variadic_name = params_it.next().expect("variadic params name missing");
+            let variadic_list = Ast::List(args_it.cloned().collect::<Vec<Ast>>());
+            // println!("variadic {} {}", variadic_name, variadic_list);
+            call_env.insert(variadic_name, variadic_list).unwrap();
+            break;
+          },
+          _ => { /*println!(" arg {}", p);*/ call_env.insert(p, args_it.next().unwrap().clone()).unwrap(); },
+        }
+      }
+      
+      eval(fun_ast, &mut call_env)
+    }
+    _ => Err(MalErr::ErrString(format!(
+      "expected a function, got {}",
+      fun
+    ))),
+  }
+}
+
+
 pub fn call(call_list: &[Ast], env: &mut Env, ast: &mut Ast) -> Option<MalRes> {
   use Ast::*;
 
