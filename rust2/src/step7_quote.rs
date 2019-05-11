@@ -51,6 +51,40 @@ fn eval_ast(ast: &Ast, env: &mut Env) -> MalRes {
   }
 }
 
+fn get_seq(a: &Ast) -> Option<&Vec<Ast>> {
+  match a {
+    Ast::List(ref l) | Ast::Vector(ref l) if l.len() > 0 => Some(l),
+    _ => None,
+  }
+}
+
+macro_rules! sym {
+   ($to_match:expr) => { Ast::Sym($to_match.to_owned()) }
+}
+
+// macro_rules! list {
+//    ($($var:ident,)*) => { Ast::List($to_match.to_owned()) }
+// }
+
+fn quasiquote(ast: &Ast) -> Ast {
+  if let Some(l) = get_seq(ast) {
+    match &l[0] {
+      Ast::Sym(ref s) if s == "unquote" => l[1].clone(),
+      x => { 
+        if let Some(l2) = get_seq(x) {
+          match &l2[0] {
+            Ast::Sym(ref s2) if s2 == "splice-unquote" => return Ast::List(vec![sym!("concat"), l2[1].clone(), quasiquote(&Ast::List(l[1..].to_vec())) ]),
+            _ => {},
+          }
+        }
+        return Ast::List(vec![sym!("cons"), quasiquote(x), quasiquote(&Ast::List(l[1..].to_vec()))]);
+      },
+    }
+  } else {
+    Ast::List(vec![sym!("quote"), ast.clone()])
+  }
+}
+
 fn eval(ast: &Ast, env: &mut Env) -> MalRes {
   // println!("eval {}", ast);
   use ast::Ast::*;
@@ -63,6 +97,16 @@ fn eval(ast: &Ast, env: &mut Env) -> MalRes {
           return Ok(List(Vec::new()));
         } else {
           match &l[0] {
+            Sym(ref s) if s == "quote" => {
+              return Ok(l[1].clone())
+            },
+            Sym(ref s) if s == "quasiquote" => {
+              ast = quasiquote(&l[1]);
+              continue 'tco;
+            },
+            Sym(ref s) if s == "unquote" => {
+              return error("niy")
+            },
             Sym(ref s) if s == "let*" => {
               let tuples = &l[1];
               let scope = &l[2];

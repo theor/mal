@@ -166,17 +166,19 @@ pub fn ns() -> Vec<(&'static str, Ast)> {
     (
       "cons",
       Fun(|args, _env| {
-      if let Ast::List(ref l) = &args[1] {
-        Ok(Ast::List(std::iter::once(&args[0]).chain(l.iter()).cloned().collect()))
-      } else {
-           error("param 2 needs to be a list")
+        match &args[1] {
+          Ast::List(ref l) | Ast::Vector(ref l) => Ok(Ast::List(std::iter::once(&args[0]).chain(l.iter()).cloned().collect())),
+          _ => error("param 2 needs to be a list"),
         }
       })
     ),
     (
       "concat",
       Fun(|args, _env| { 
-        Ok(Ast::List(args.iter().filter_map(|a| if let Ast::List(ref l) = &a { Some(l.iter()) } else { None }).flatten().cloned().collect()))
+        Ok(Ast::List(args.iter().filter_map(|a| match &a { 
+          Ast::List(ref l) |  Ast::Vector(ref l) => Some(l.iter()),
+          _ => None
+        }).flatten().cloned().collect()))
       })
     ),
     // (

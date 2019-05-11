@@ -97,6 +97,26 @@ fn read_atom(s: &mut Reader) -> MalRes {
 fn read_form(s: &mut Reader) -> MalRes {
     let next = s.peek()?;
     match &next[..] {
+        "'" => {
+            s.next()?;
+            let derefed = read_form(s)?;
+            Ok(Ast::List(vec![Ast::Sym("quote".to_owned()), derefed]))
+        },
+        "`" => {
+            s.next()?;
+            let derefed = read_form(s)?;
+            Ok(Ast::List(vec![Ast::Sym("quasiquote".to_owned()), derefed]))
+        },
+        "~" => {
+            s.next()?;
+            let derefed = read_form(s)?;
+            Ok(Ast::List(vec![Ast::Sym("unquote".to_owned()), derefed]))
+        },
+        "~@" => {
+            s.next()?;
+            let derefed = read_form(s)?;
+            Ok(Ast::List(vec![Ast::Sym("splice-unquote".to_owned()), derefed]))
+        },
         "@" => {
             s.next()?;
             let derefed = read_form(s)?;
@@ -105,7 +125,7 @@ fn read_form(s: &mut Reader) -> MalRes {
         "(" => {
             s.next()?;
             read_list(s, ')', Ast::List)
-        }
+        },
         "[" => {
             s.next()?;
             read_list(s, ']', Ast::Vector)
