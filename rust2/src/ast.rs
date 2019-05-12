@@ -38,6 +38,7 @@ pub enum Ast {
         ast: Rc<Ast>,
         params: Vec<String>,
         env: Env,
+        is_macro: bool,
     },
     Atom(Rc<RefCell<Ast>>),
 }
@@ -148,6 +149,7 @@ pub fn apply(call_list: &[Ast], env: &mut Env) -> MalRes {
       eval,
       params,
       env: ref closure_env,
+      is_macro: _,
     } => {
       let mut call_env = Env::env_bind(closure_env);
       let mut params_it = params.iter();
@@ -167,10 +169,13 @@ pub fn apply(call_list: &[Ast], env: &mut Env) -> MalRes {
       
       eval(fun_ast, &mut call_env)
     }
-    _ => Err(MalErr::ErrString(format!(
+    _ => {
+      // panic!("apply {}", fun);
+      Err(MalErr::ErrString(format!(
       "expected a function, got {}",
       fun
-    ))),
+    )))
+    },
   }
 }
 
@@ -189,6 +194,7 @@ pub fn call(call_list: &[Ast], env: &mut Env, ast: &mut Ast) -> Option<MalRes> {
       eval: _,
       params,
       env: ref closure_env,
+      is_macro: _,
     } => {
       let mut call_env = Env::env_bind(closure_env);
       let mut params_it = params.iter();
@@ -211,10 +217,13 @@ pub fn call(call_list: &[Ast], env: &mut Env, ast: &mut Ast) -> Option<MalRes> {
       None
       // eval(ast, &mut call_env)
     }
-    _ => Some(Err(MalErr::ErrString(format!(
+    _ => { 
+      // panic!("call {}", fun);
+      Some(Err(MalErr::ErrString(format!(
       "expected a function, got {}",
       fun
-    )))),
+    ))))
+    },
   }
 }
 

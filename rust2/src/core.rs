@@ -181,6 +181,38 @@ pub fn ns() -> Vec<(&'static str, Ast)> {
         }).flatten().cloned().collect()))
       })
     ),
+    (
+      "nth",
+      Fun(|args, _env| { 
+        match &args[0] {
+            Ast::List(ref l) |  Ast::Vector(ref l) => {
+              match &args[1] {
+            Ast::Int(i) => l.get(*i as usize).cloned().ok_or_else(|| MalErr::ErrString("out of range exception".to_owned())),
+            _ => error("nth param 2 must be an int"),
+              }
+            },
+            _ => error("nth param 1 must be a list|vector"),
+        }
+      })
+    ),
+     (
+      "first",
+      Fun(|args, _env| { 
+         match &args[0] {
+            Ast::List(ref l) |  Ast::Vector(ref l) => Ok(l.iter().cloned().next().unwrap_or(Nil)),
+            _ => Ok(Nil),
+         }
+      })
+    ),
+     (
+      "rest",
+      Fun(|args, _env| { 
+         match &args[0] {
+            Ast::List(ref l) |  Ast::Vector(ref l) => Ok(Ast::List(l.iter().cloned().skip(1).collect())),
+            _ => Ok(List(vec![])),
+         }
+      })
+    ),
     // (
     //   "read-string",
     //   Fun(|args, _env| {})

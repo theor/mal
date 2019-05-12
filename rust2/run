@@ -1,5 +1,5 @@
 #!/bin/bash
 # exec $(dirname $0)/${STEP:-stepA_mal} "${@}"
 echo running ${STEP:-stepA_mal} "${@}"
-cd $(dirname $0) && cargo r --bin step7_quote "${@}" #2>/dev/null
+cd $(dirname $0) && cargo r --bin step8_macros "${@}" #2>/dev/null
 # cd $(dirname $0) && cargo r --bin ${STEP:-stepA_mal} "${@}" 2>/dev/null
